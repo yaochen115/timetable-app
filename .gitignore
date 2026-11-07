@@ -1,0 +1,30 @@
+# Local build tools, signing keys and browser profiles
+.runtime/
+.signing/
+.build/
+.gradle/
+build/
+构建/
+/验收/浏览器临时数据/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+Thumbs.db
+local.properties
+
+# Credentials remain local
+.env
+.env.*
+!.env.example
+!.env.sample
+key.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+
+# Generated application packages stay local
+*.apk
+*.aab

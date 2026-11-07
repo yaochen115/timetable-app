@@ -1,0 +1,152 @@
+{
+  "checkedAt": "2026-11-07T05:55:44.188Z",
+  "results": [
+    {
+      "name": "初次启动空课表并显示首次设置",
+      "passed": true
+    },
+    {
+      "name": "设置完成前不写入半成品",
+      "passed": true
+    },
+    {
+      "name": "首次逐节时间表可编辑",
+      "passed": true
+    },
+    {
+      "name": "首次设置保存且自动计算第8周",
+      "passed": true
+    },
+    {
+      "name": "首页日期为设备当天",
+      "passed": true
+    },
+    {
+      "name": "学期开始前与结束后周次夹在边界",
+      "passed": true
+    },
+    {
+      "name": "实际入口添加连续两节课并保存",
+      "passed": true
+    },
+    {
+      "name": "重叠课程拦截不破坏原课表",
+      "passed": true
+    },
+    {
+      "name": "仅当前周编辑保留其他周原安排",
+      "passed": true
+    },
+    {
+      "name": "查看其他周按其周次显示",
+      "passed": true
+    },
+    {
+      "name": "返回本周恢复自动周次",
+      "passed": true
+    },
+    {
+      "name": "复制只粘贴名称教师地点",
+      "passed": true
+    },
+    {
+      "name": "校准周次持久保存",
+      "passed": true
+    },
+    {
+      "name": "校准周次后日期仍对齐实际本周",
+      "passed": true
+    },
+    {
+      "name": "主题同步原生桥并保存",
+      "passed": true
+    },
+    {
+      "name": "重启读取原生桥恢复课程和校准",
+      "passed": true
+    },
+    {
+      "name": "原生剪贴板复制完整课表文字",
+      "passed": true
+    },
+    {
+      "name": "新建空课表独立于原表",
+      "passed": true
+    },
+    {
+      "name": "文字替换还原全部课程和校准",
+      "passed": true
+    },
+    {
+      "name": "文字另存创建独立ID",
+      "passed": true
+    },
+    {
+      "name": "切换恢复原课表课程",
+      "passed": true
+    },
+    {
+      "name": "全部周次删除课程",
+      "passed": true
+    },
+    {
+      "name": "减少节数列出受影响课程",
+      "passed": true
+    },
+    {
+      "name": "取消调整保留作息和课程",
+      "passed": true
+    },
+    {
+      "name": "确认减少节数移除对应安排",
+      "passed": true
+    },
+    {
+      "name": "增加节数逐节配置后提交",
+      "passed": true
+    },
+    {
+      "name": "相邻节次时间冲突不保存",
+      "passed": true
+    },
+    {
+      "name": "拒绝不存在的日期",
+      "passed": true
+    },
+    {
+      "name": "新建学期与课表真实隔离",
+      "passed": true
+    },
+    {
+      "name": "损坏导入不改变课表",
+      "passed": true
+    },
+    {
+      "name": "系统返回关闭面板",
+      "passed": true
+    },
+    {
+      "name": "平板七天完整且无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "窄屏无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "横屏编辑面板仍可滚动操作",
+      "passed": true
+    },
+    {
+      "name": "手机实际长按拖选只带入节次",
+      "passed": true
+    },
+    {
+      "name": "无脚本异常",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "nativeBridge": "browser mock",
+  "device": "Chrome emulation"
+}

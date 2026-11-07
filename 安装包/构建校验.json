@@ -1,0 +1,25 @@
+{
+  "version": "1.0.1",
+  "package": "com.linmu.timetable",
+  "minAndroid": 8,
+  "targetSdk": 35,
+  "apk": "D:\\WORK\\丢给ai玩\\课表\\安装包\\林木-Android-1.0.1.apk",
+  "bytes": 37676,
+  "sha256": "7a777f0b9ad242ce75190a840e6a0bc511aca6803aff4949c96633dc782f63ca",
+  "signature": "Verifies\r\nVerified using v1 scheme (JAR signing): false\r\nVerified using v2 scheme (APK Signature Scheme v2): true\r\nVerified using v3 scheme (APK Signature Scheme v3): true\r\nVerified using v3.1 scheme (APK Signature Scheme v3.1): false\r\nVerified using v4 scheme (APK Signature Scheme v4): false\r\nVerified for SourceStamp: false\r\nNumber of signers: 1\r\nSigner #1 certificate DN: CN=Linmu, O=Linmu\r\nSigner #1 certificate SHA-256 digest: 5017602924dec6dbab02e1c884b88875a676ad8dabe4f3b4a0eb914bfdd7ca7f\r\nSigner #1 certificate SHA-1 digest: b2c3b0ea2e04a370380ec25c0a44c3d0a914b0d4\r\nSigner #1 certificate MD5 digest: 6f2ab804522714a2cea4f784623cb978\r\nSigner #1 key algorithm: RSA\r\nSigner #1 key size (bits): 3072\r\nSigner #1 public key SHA-256 digest: 4a1807fca10b51c7d9e61dd587c1c52715d0f42321538ced132c16a284d261bc\r\nSigner #1 public key SHA-1 digest: f90490349c3f175111e524d777913cd715535926\r\nSigner #1 public key MD5 digest: 48165770f2b02fe1155d31b576de8b8f\r\n",
+  "badging": "package: name='com.linmu.timetable' versionCode='2' versionName='1.0.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'\r\nsdkVersion:'26'\r\ntargetSdkVersion:'35'\r\napplication-label:'林木'\r\napplication-icon-160:'res/mipmap-anydpi-v26/ic_launcher.xml'\r\napplication-icon-65534:'res/mipmap-anydpi-v26/ic_launcher.xml'\r\napplication: label='林木' icon='res/mipmap-anydpi-v26/ic_launcher.xml'\r\nlaunchable-activity: name='com.linmu.timetable.MainActivity'  label='' icon=''\r\nfeature-group: label=''\r\n  uses-feature: name='android.hardware.faketouch'\r\n  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'\r\nmain\r\nsupports-screens: 'small' 'normal' 'large' 'xlarge'\r\nsupports-any-density: 'true'\r\nlocales: '--_--'\r\ndensities: '160' '65534'\r\n",
+  "permissions": "package: com.linmu.timetable\r\n",
+  "builtAt": "2026-11-07T06:20:16.332Z",
+  "assetsSha256": {
+    "index.html": "cfefe5f3d4f87da47864da4c2665decfe17e100a418019ec372ac168c9cf8372",
+    "styles.css": "ee029ca11cbaa23cfca90619c23e9c8aa72277cafc39fec31ab08fa111b437d6",
+    "app.js": "58a1a144bc5c543302a07f2b338760ffcd26fe846cbfb8f23f6c5e29051ef099",
+    "icon.svg": "9cb3e0c3d8b635c48eb04773476d1a0e0df8ace888c67fe2f4d9cf732a0d890d"
+  },
+  "verifiedApkEntries": [
+    "assets/app.js",
+    "assets/icon.svg",
+    "assets/index.html",
+    "assets/styles.css"
+  ]
+}

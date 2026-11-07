@@ -1,0 +1,150 @@
+{
+  "checkedAt": "2026-11-07T05:30:28.270Z",
+  "results": [
+    {
+      "name": "手机七列完整，无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "第8周展示双周课程，隐藏同位置单周课程",
+      "passed": true
+    },
+    {
+      "name": "课程色块与网格边界贴合",
+      "passed": true
+    },
+    {
+      "name": "手机课程地点超宽时换行",
+      "passed": true
+    },
+    {
+      "name": "切换第9周展示单周课程并隐藏双周课程",
+      "passed": true
+    },
+    {
+      "name": "详情面板可打开",
+      "passed": true
+    },
+    {
+      "name": "粘贴只带入课程名、教师、地点",
+      "passed": true
+    },
+    {
+      "name": "拖选范围只带入节次，星期留空",
+      "passed": true
+    },
+    {
+      "name": "左侧时间编辑面板可打开",
+      "passed": true
+    },
+    {
+      "name": "平板无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "320像素窄屏无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "窄屏弹窗在视口范围内",
+      "passed": true
+    },
+    {
+      "name": "横屏无横向溢出",
+      "passed": true
+    },
+    {
+      "name": "从正常入口新建课表后首页为空",
+      "passed": true
+    },
+    {
+      "name": "新课表可独立添加课程",
+      "passed": true
+    },
+    {
+      "name": "切回原课表恢复原课程与设置",
+      "passed": true
+    },
+    {
+      "name": "切回新课表保留独立数据",
+      "passed": true
+    },
+    {
+      "name": "导入预览来自实际输入",
+      "passed": true
+    },
+    {
+      "name": "导入另存新课表不与旧课表判冲突",
+      "passed": true
+    },
+    {
+      "name": "替换导入清除原课程并替换作息，保留课表ID",
+      "passed": true
+    },
+    {
+      "name": "无效导入不清空原数据且不生成预览",
+      "passed": true
+    },
+    {
+      "name": "取消替换预览保留原数据",
+      "passed": true
+    },
+    {
+      "name": "仅导入数据内部冲突时提示部分导入",
+      "passed": true
+    },
+    {
+      "name": "文件选择入口读取实际文件生成预览",
+      "passed": true
+    },
+    {
+      "name": "口令文本不触发网络且保留现有数据",
+      "passed": true
+    },
+    {
+      "name": "导入面板已移除第三方入口",
+      "passed": true
+    },
+    {
+      "name": "林木数据成功读取后显示实际课程预览",
+      "passed": true
+    },
+    {
+      "name": "缺少crypto的手机环境实际点按导入可完成",
+      "passed": true
+    },
+    {
+      "name": "导出入口直接生成单串文字",
+      "passed": true
+    },
+    {
+      "name": "导出文字完整保留中文备注周次与作息",
+      "passed": true
+    },
+    {
+      "name": "无法自动复制时选中文字并提示手动复制",
+      "passed": true
+    },
+    {
+      "name": "从普通导入入口还原林木文字并另存",
+      "passed": true
+    },
+    {
+      "name": "林木文字支持整体替换",
+      "passed": true
+    },
+    {
+      "name": "损坏文字不修改课表且给出错误",
+      "passed": true
+    },
+    {
+      "name": "刷新后恢复当前课表且各课表数据保留",
+      "passed": true
+    },
+    {
+      "name": "无浏览器脚本异常",
+      "passed": true
+    }
+  ],
+  "errors": []
+}
