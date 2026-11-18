@@ -47,7 +47,6 @@ svg { flex-shrink: 0; }
 .week-line { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
 .week-line strong { font-size: 24px; font-weight: 600; letter-spacing: .5px; }
 .week-line .icon { width: 15px; height: 15px; color: var(--secondary); }
-.table-name { font-size: 12px; color: var(--secondary); border-left: 1px solid var(--line); padding-left: 12px; margin-left: 8px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .toolbar-actions { display: flex; align-items: center; gap: 9px; }
 .icon-button { width: 42px; height: 42px; border-radius: 13px; background: transparent; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 @media (hover: hover) { .icon-button:hover, .time-cell:hover { background: var(--field); } .course:hover { filter: brightness(.97); } .empty-cell:hover { background: var(--field); } }
@@ -94,6 +93,8 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; min-hei
 .full { width: 100%; }
 .panel-footer { margin-top: 24px; display: flex; gap: 10px; }
 .panel-footer > * { flex: 1; }
+.import-actions { position: sticky; bottom: 0; padding-top: 16px; background: var(--surface); }
+.import-error { margin: 0 0 12px; color: var(--danger); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
 .swatches { display: flex; gap: 12px; }
 .swatch { width: 34px; height: 34px; padding: 4px; background: var(--course-bg); color: var(--course-ink); border-radius: 50%; display: grid; place-items: center; outline-offset: 3px; }
 .swatch.active { outline: 1.5px solid var(--course-ink); }
@@ -152,7 +153,6 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; min-hei
   .weekday { margin-left: 3px; }
   .week-line { margin-top: 8px; gap: 3px; }
   .week-line strong { font-size: 21px; }
-  .table-name { max-width: 62px; padding-left: 7px; margin-left: 4px; font-size: 10px; }
   .toolbar-actions { gap: 0; }
   .toolbar-actions .icon-button { width: 38px; height: 44px; }
   .toolbar-actions .icon { width: 20px; height: 20px; }
@@ -169,5 +169,5 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; min-hei
   .panel-header { padding: 7px 15px 9px 22px; }
   #panel-body { padding: 8px 22px 25px; }
 }
-@media (max-width: 359px) { .toolbar { padding-left: 10px; padding-right: 6px; } .toolbar-actions .icon-button { width: 34px; } .table-name { display: none; } .course-name { font-size: 10px; } }
+@media (max-width: 359px) { .toolbar { padding-left: 10px; padding-right: 6px; } .toolbar-actions .icon-button { width: 34px; } .course-name { font-size: 10px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

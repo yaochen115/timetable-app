@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-07T05:55:44.188Z",
+  "checkedAt": "2026-11-07T16:59:37.554Z",
   "results": [
     {
       "name": "初次启动空课表并显示首次设置",
@@ -66,7 +66,7 @@
       "passed": true
     },
     {
-      "name": "原生剪贴板复制完整课表文字",
+      "name": "原生剪贴板复制精简课表文字",
       "passed": true
     },
     {
@@ -139,6 +139,74 @@
     },
     {
       "name": "手机实际长按拖选只带入节次",
+      "passed": true
+    },
+    {
+      "name": "旧版LINMU1课表文字仍可完整导入",
+      "passed": true
+    },
+    {
+      "name": "精简格式显著缩短并保留可读中文",
+      "passed": true
+    },
+    {
+      "name": "连续周单双周和组合周次无损还原",
+      "passed": true
+    },
+    {
+      "name": "异常周次范围及时拒绝",
+      "passed": true
+    },
+    {
+      "name": "用户课表16条通过真实导入入口预览",
+      "passed": true
+    },
+    {
+      "name": "进入预览释放输入焦点并通知安卓收起键盘",
+      "passed": true
+    },
+    {
+      "name": "缩小视口后导入按钮实际可点按",
+      "passed": true
+    },
+    {
+      "name": "安卓保存失败在弹窗内持续显示错误且允许重试",
+      "passed": true
+    },
+    {
+      "name": "失败后原课表和磁盘内容完整保留",
+      "passed": true
+    },
+    {
+      "name": "重试可完成用户课表导入并兼容失效UUID接口",
+      "passed": true
+    },
+    {
+      "name": "另存导入保留原课表并持久化全部16条",
+      "passed": true
+    },
+    {
+      "name": "导入后重启恢复用户课表",
+      "passed": true
+    },
+    {
+      "name": "新格式保留备注特殊字符颜色和学期信息",
+      "passed": true
+    },
+    {
+      "name": "空课表可导出精简文字并还原",
+      "passed": true
+    },
+    {
+      "name": "用户课表整体替换保持16条且不重复叠加",
+      "passed": true
+    },
+    {
+      "name": "导入错误提示位于对话框顶层可见区域",
+      "passed": true
+    },
+    {
+      "name": "损坏精简文字不覆盖现有课表",
       "passed": true
     },
     {

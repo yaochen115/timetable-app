@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -49,7 +49,7 @@ try {
     if (response.exceptionDetails) throw new Error(JSON.stringify(response.exceptionDetails));
     return response.result.value;
   };
-  await command('Page.addScriptToEvaluateOnNewDocument', { source: `window.LinmuNative = { readState() { return localStorage.getItem('native-test-state') || ''; }, writeState(text) { localStorage.setItem('native-test-state', text); return true; }, copyText(text) { window.__copiedText = text; return true; }, setAppearance(mode) { window.__nativeAppearance = mode; } };` });
+  await command('Page.addScriptToEvaluateOnNewDocument', { source: `window.LinmuNative = { readState() { return localStorage.getItem('native-test-state') || ''; }, writeState(text) { if (window.__failSave) return false; localStorage.setItem('native-test-state', text); return true; }, copyText(text) { window.__copiedText = text; return true; }, setAppearance(mode) { window.__nativeAppearance = mode; }, hideKeyboard() { window.__keyboardHideCount = (window.__keyboardHideCount || 0) + 1; } };` });
   const url = pathToFileURL(path.join(root, 'web/index.html')).href;
   async function navigate() {
     await command('Page.navigate', { url });
@@ -102,7 +102,7 @@ try {
   check('重启读取原生桥恢复课程和校准', await evaluate(`initialized && courses.length === 2 && currentWeek === 10 && weekOffset === 2 && appearance === 'dark' && !panel.open`));
   await evaluate(`openSettings(); document.querySelector('#theme-select').value = 'light'; document.querySelector('#theme-select').dispatchEvent(new Event('change')); closePanel(); openShare(); document.querySelector('#copy-export').click()`);
   const encoded = await evaluate(`document.querySelector('#export-text').value`);
-  check('原生剪贴板复制完整课表文字', await evaluate(`window.__copiedText === document.querySelector('#export-text').value && window.__copiedText.startsWith('LINMU1.')`));
+  check('原生剪贴板复制精简课表文字', await evaluate(`window.__copiedText === document.querySelector('#export-text').value && window.__copiedText.startsWith('林木2')`));
   await evaluate(`closePanel(); openTables(); document.querySelector('#new-table').click(); document.querySelector('#table-form [name=name]').value = '新课表'; document.querySelector('#table-form').requestSubmit()`);
   const emptyId = await evaluate('activeTableId');
   check('新建空课表独立于原表', await evaluate(`tableName === '新课表' && courses.length === 0 && times.length === 8`));
@@ -150,6 +150,50 @@ try {
   check('手机实际长按拖选只带入节次', await evaluate(`document.querySelector('#course-form') !== null && document.querySelector('[name=start]').value === '1' && document.querySelector('[name=end]').value === '2' && document.querySelector('[name=day]').value === ''`));
   await evaluate('closePanel()');
   await shot('06-第二学期.png');
+  const legacyCustomerText = await readFile(path.resolve(root, '../导入数据/朱致远的课表-导入文字.txt'), 'utf8');
+  check('旧版LINMU1课表文字仍可完整导入', await evaluate(`parseImport(${JSON.stringify(legacyCustomerText)}).schedule.courses.length === 16`));
+  const customerText = await readFile(path.resolve(root, '../导入数据/朱致远的课表-精简文字.txt'), 'utf8');
+  check('精简格式显著缩短并保留可读中文', customerText.length < legacyCustomerText.length * .3 && customerText.includes('高等数学'));
+  check('连续周单双周和组合周次无损还原', await evaluate(`encodeWeeks([1,2,3,4,6,7,8,9]) === '1-4,6-9' && encodeWeeks([1,3,5,7,9]) === '1-9/2' && encodeWeeks([2,4,6,8]) === '2-8/2' && decodeWeeks('1-5/2,8,10-12').join(',') === '1,3,5,8,10,11,12' && decodeWeeks('1-60').length === 60`));
+  check('异常周次范围及时拒绝', await evaluate(`(() => { try { decodeWeeks('1-999999999'); return false; } catch { return true; } })()`));
+  const priorTableId = await evaluate('activeTableId');
+  const priorState = await evaluate(`localStorage.getItem('native-test-state')`);
+  await evaluate(`openImport(); document.querySelector('#import-text').value = ${JSON.stringify(customerText)}; document.querySelector('#import-text').focus(); document.querySelector('#import-preview').click()`);
+  check('用户课表16条通过真实导入入口预览', await evaluate(`pendingImport.schedule.courses.length === 16 && pendingImport.schedule.times.length === 12 && pendingImport.invalid === 0 && pendingImport.conflicts === 0`));
+  check('进入预览释放输入焦点并通知安卓收起键盘', await evaluate(`document.activeElement.tagName !== 'TEXTAREA' && window.__keyboardHideCount > 0`));
+  await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 390, deviceScaleFactor: 1, mobile: true });
+  await evaluate(`window.__failSave = true; document.querySelector('#confirm-import').scrollIntoView({block:'nearest'})`);
+  await shot('07-窄视口导入预览.png');
+  async function tapImport() {
+    const point = await evaluate(`new Promise(resolve => requestAnimationFrame(() => { const rect = document.querySelector('#confirm-import').getBoundingClientRect(); resolve({x:rect.x+rect.width/2,y:rect.y+rect.height/2}); }))`);
+    await command('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+    await command('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  check('缩小视口后导入按钮实际可点按', await evaluate(`(() => { const button = document.querySelector('#confirm-import'); const rect = button.getBoundingClientRect(); return rect.top >= 0 && rect.bottom <= innerHeight && document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2) === button; })()`));
+  await tapImport();
+  check('安卓保存失败在弹窗内持续显示错误且允许重试', await evaluate(`document.querySelector('#import-error').hidden === false && document.querySelector('#import-error').textContent.includes('无法保存课表') && document.querySelector('#confirm-import').disabled === false && pendingImport !== null`));
+  check('失败后原课表和磁盘内容完整保留', await evaluate(`activeTableId === '${priorTableId}' && courses.length === 0 && localStorage.getItem('native-test-state') === ${JSON.stringify(priorState)}`));
+  await shot('07-导入失败反馈.png');
+  await evaluate(`window.__failSave = false; window.__realCryptoDescriptor = Object.getOwnPropertyDescriptor(window, 'crypto'); Object.defineProperty(window, 'crypto', {value:{randomUUID(){throw new Error('Unavailable');}},configurable:true}); true`);
+  await tapImport();
+  check('重试可完成用户课表导入并兼容失效UUID接口', await evaluate(`courses.length === 16 && times.length === 12 && tableName === '朱致远的课表' && document.querySelector('#panel-body').textContent.includes('已导入 16 条课程安排')`));
+  check('另存导入保留原课表并持久化全部16条', await evaluate(`activeTableId !== '${priorTableId}' && terms.find(term=>term.id===activeTermId).tables.find(table=>table.id==='${priorTableId}').courses.length === 0 && JSON.parse(localStorage.getItem('native-test-state')).activeTableId === activeTableId`));
+  await evaluate(`Object.defineProperty(window, 'crypto', window.__realCryptoDescriptor); delete window.__realCryptoDescriptor; document.querySelector('#import-done').click()`);
+  await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await shot('08-用户课表导入.png');
+  const customerId = await evaluate('activeTableId');
+  await navigate();
+  check('导入后重启恢复用户课表', await evaluate(`activeTableId === '${customerId}' && courses.length === 16 && times.length === 12`));
+  check('新格式保留备注特殊字符颜色和学期信息', await evaluate(`(() => { const original = copyData(currentTable()); original.name = '中文🌳课表'; original.courses[0].note = '引号"与竖线|\\n第二行\\t制表'; original.courses[0].color = 'lilac'; const decoded = parseImport(encodeShareText(original)).schedule; return decoded.name === original.name && decoded.courses[0].note === original.courses[0].note && decoded.courses[0].color === 'lilac' && JSON.stringify(decoded.times) === JSON.stringify(original.times) && decoded.weekOffset === original.weekOffset && decoded.termStart === original.termStart; })()`));
+  check('空课表可导出精简文字并还原', await evaluate(`parseImport(encodeShareText({...copyData(currentTable()),courses:[]})).schedule.courses.length === 0`));
+  await evaluate(`openImport(); document.querySelector('#import-text').value = ${JSON.stringify(customerText)}; document.querySelector('#import-preview').click(); document.querySelector('#import-mode').value = 'replace'; document.querySelector('#confirm-import').click()`);
+  check('用户课表整体替换保持16条且不重复叠加', await evaluate(`activeTableId === '${customerId}' && courses.length === 16 && document.querySelector('#import-done') !== null`));
+  await evaluate(`closePanel(); openImport(); document.querySelector('#import-text').value = 'LINMU1.broken'; document.querySelector('#import-preview').click()`);
+  check('导入错误提示位于对话框顶层可见区域', await evaluate(`document.querySelector('#toast').parentElement === panel && document.querySelector('#toast').classList.contains('visible')`));
+  await evaluate(`document.querySelector('#import-text').value = '林木2\\n[]'; document.querySelector('#import-preview').click()`);
+  check('损坏精简文字不覆盖现有课表', await evaluate(`courses.length === 16 && pendingImport === null && document.querySelector('#toast').textContent.includes('不完整或格式无效')`));
+  await evaluate('closePanel()');
   check('无脚本异常', errors.length === 0);
   await writeFile(path.join(output, '界面校验.json'), JSON.stringify({ checkedAt: new Date().toISOString(), results, errors, nativeBridge: 'browser mock', device: 'Chrome emulation' }, null, 2));
   console.log(JSON.stringify({ passed: results.length, output }));

@@ -16,7 +16,9 @@ let browsingWeek = false;
 let tableName = '我的课表';
 const copyData = (value) => JSON.parse(JSON.stringify(value));
 function makeId() {
-  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  try {
+    if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  } catch { /* 部分 WebView 暴露接口但无法调用，继续使用本地 ID。 */ }
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 const storageKey = 'linmu-schedules-v1';
@@ -59,14 +61,18 @@ function persistTables() {
   const text = JSON.stringify({ version: 1, initialized, appearance, terms, activeTermId, activeTableId });
   if (text === lastSavedText) return;
   try {
-    if (window.LinmuNative) {
-      if (!window.LinmuNative.writeState(text)) throw new Error('Storage failed');
-    } else localStorage.setItem(storageKey, text);
+    writeStoredState(text);
     lastSavedText = text;
     storageWarningShown = false;
   } catch {
     if (!storageWarningShown) { storageWarningShown = true; toast('保存失败，请导出课表备份'); }
   }
+}
+
+function writeStoredState(text) {
+  if (window.LinmuNative) {
+    if (!window.LinmuNative.writeState(text)) throw new Error('无法保存课表，请重试');
+  } else localStorage.setItem(storageKey, text);
 }
 
 function activateTable(termId, tableId) {
@@ -130,8 +136,10 @@ function applyAppearance() {
 function toast(message) {
   if (storageWarningShown && /已保存|已创建|已删除/.test(message)) message = '保存失败，请导出课表备份';
   clearTimeout(toastTimer);
-  $('#toast').textContent = message;
-  $('#toast').classList.add('visible');
+  const notification = $('#toast');
+  (panel.open ? panel : document.body).appendChild(notification);
+  notification.textContent = message;
+  notification.classList.add('visible');
   toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 2400);
 }
 
@@ -147,6 +155,7 @@ function closePanel() { if (initialized) panel.close(); }
 panel.addEventListener('cancel', (event) => { if (!initialized) event.preventDefault(); });
 $('#close-panel').addEventListener('click', closePanel);
 panel.addEventListener('close', () => lastFocus?.isConnected && lastFocus.focus());
+panel.addEventListener('close', () => document.body.appendChild($('#toast')));
 panel.addEventListener('click', (event) => { if (event.target === panel) { const rect = panel.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closePanel(); } });
 
 function weekDate(week, offset = 0) {
@@ -167,7 +176,6 @@ function renderSchedule() {
   $('.date-line').innerHTML = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 <span class="weekday">${['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][today.getDay()]}</span>`;
   persistTables();
   $('#week-label').textContent = `第 ${currentWeek} 周`;
-  $('#table-name').textContent = tableName;
   const grid = $('#schedule');
   grid.style.setProperty('--rows', times.length);
   let html = '<div class="day-heading corner" style="grid-column:1" aria-label="节次">节</div>';
@@ -379,6 +387,10 @@ function prepareImport(text, button) {
 function parseImport(text) {
   text = text.trim();
   if (text.length > 2 * 1024 * 1024) throw new Error('课表内容过大');
+  if (text.startsWith('林木2')) {
+    try { text = JSON.stringify(decodeShareText(text)); }
+    catch { throw new Error('课表文字不完整或格式无效，请重新复制'); }
+  }
   if (text.startsWith('LINMU1.')) {
     try {
       const encoded = text.slice(7).replace(/\s/g, '').replace(/-/g, '+').replace(/_/g, '/');
@@ -433,11 +445,21 @@ function coursesOverlap(first, second) {
 
 function openImportPreview() {
   if (!pendingImport) { toast('请先读取课表内容'); return; }
+  document.activeElement?.blur();
+  window.LinmuNative?.hideKeyboard?.();
   const imported = pendingImport.schedule;
-  openPanel('导入预览', `<h2 style="font-size:22px;font-weight:550;margin:6px 0">${escapeText(imported.name)}</h2><p class="muted">${escapeText(imported.termStart)} · ${imported.totalWeeks} 周</p><div class="summary"><div><strong>${imported.courses.length}</strong><small>课程安排</small></div><div><strong>${imported.times.length}</strong><small>每日节数</small></div></div><div class="form-stack"><label class="check-line"><input type="checkbox" id="import-metadata" checked>导入作息与学期日期</label><label class="field">保存方式<select id="import-mode"><option value="new">另存新课表</option><option value="replace">替换当前课表</option></select></label><button class="primary" id="confirm-import">导入</button></div>`);
+  openPanel('导入预览', `<h2 style="font-size:22px;font-weight:550;margin:6px 0">${escapeText(imported.name)}</h2><p class="muted">${escapeText(imported.termStart)} · ${imported.totalWeeks} 周</p><div class="summary"><div><strong>${imported.courses.length}</strong><small>课程安排</small></div><div><strong>${imported.times.length}</strong><small>每日节数</small></div></div><div class="form-stack"><label class="check-line"><input type="checkbox" id="import-metadata" checked>导入作息与学期日期</label><label class="field">保存方式<select id="import-mode"><option value="new">另存新课表</option><option value="replace">替换当前课表</option></select></label></div><div class="import-actions"><p id="import-error" class="import-error" role="alert" hidden></p><button type="button" class="primary full" id="confirm-import">导入</button></div>`);
   $('#confirm-import').onclick = () => {
+    const button = $('#confirm-import');
+    button.disabled = true;
+    $('#import-error').hidden = true;
     try { applyImport(); }
-    catch (error) { console.error('Import failed', error); toast('导入未完成，请重试'); }
+    catch (error) {
+      console.error('Import failed', error);
+      $('#import-error').textContent = `导入未完成。${error.message || '请重试'}`;
+      $('#import-error').hidden = false;
+      $('#import-error').scrollIntoView({ block: 'nearest' });
+    } finally { if (button.isConnected) button.disabled = false; }
   };
 }
 
@@ -446,7 +468,7 @@ function applyImport() {
   const { schedule, termId, tableId } = pendingImport;
   const term = terms.find((item) => item.id === termId);
   const target = term?.tables.find((table) => table.id === tableId);
-  if (!target) { toast('目标课表不存在，请重新导入'); return; }
+  if (!target) throw new Error('目标课表不存在，请重新打开导入');
   const replace = $('#import-mode').value === 'replace';
   const imported = copyData(schedule);
   let skipped = pendingImport.invalid + pendingImport.conflicts;
@@ -458,14 +480,25 @@ function applyImport() {
       if (!valid) skipped++;
       return valid;
     });
-    if (schedule.courses.length && !imported.courses.length) { toast('现有作息或周数无法容纳这些课程'); return; }
+    if (schedule.courses.length && !imported.courses.length) throw new Error('现有作息或周数无法容纳这些课程，请勾选导入作息与学期日期');
   }
   rememberCurrentTable();
-  if (replace) Object.assign(target, imported, { id: tableId });
-  else { imported.id = makeId(); term.tables.push(imported); }
-  activeTermId = termId; activeTableId = replace ? tableId : imported.id;
-  loadCurrentTable(); renderSchedule();
-  const message = storageWarningShown ? '已载入，保存失败，请导出课表备份。' : skipped ? (pendingImport.conflicts ? '课程冲突，已导入部分。' : '部分课程无效，已导入有效课程。') : '导入完成';
+  const nextTerms = copyData(terms);
+  const nextTerm = nextTerms.find((item) => item.id === termId);
+  imported.id = replace ? tableId : makeId();
+  imported.currentWeek = Math.max(1, Math.min(imported.totalWeeks, rawAcademicWeek(imported.termStart) + imported.weekOffset));
+  if (replace) nextTerm.tables[nextTerm.tables.findIndex((table) => table.id === tableId)] = imported;
+  else nextTerm.tables.push(imported);
+  const text = JSON.stringify({ version: 1, initialized: true, appearance, terms: nextTerms, activeTermId: termId, activeTableId: imported.id });
+  writeStoredState(text);
+  terms = nextTerms;
+  activeTermId = termId;
+  activeTableId = imported.id;
+  lastSavedText = text;
+  storageWarningShown = false;
+  loadCurrentTable();
+  renderSchedule();
+  const message = skipped ? (pendingImport.conflicts ? '课程冲突，已导入部分。' : '部分课程无效，已导入有效课程。') : `已导入 ${imported.courses.length} 条课程安排`;
   pendingImport = null;
   openPanel('导入结果', `<p style="font-size:15px;line-height:1.8">${message}</p><div class="panel-footer"><button class="primary" id="import-done">完成</button></div>`);
   $('#import-done').onclick = closePanel;
@@ -479,9 +512,69 @@ function openShare() {
 
 function exportScheduleText() {
   const schedule = { name: tableName, courses, times, totalWeeks, termStart, weekOffset };
-  const bytes = new TextEncoder().encode(JSON.stringify({ format: 'linmu', version: 1, schedule }));
-  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
-  return `LINMU1.${btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`;
+  return encodeShareText(schedule);
+}
+
+function encodeWeeks(values) {
+  const weeks = [...new Set(values)].sort((first, second) => first - second);
+  if (weeks.length > 2 && weeks.every((week, index) => week === weeks[0] + index * 2)) return `${weeks[0]}-${weeks[weeks.length - 1]}/2`;
+  const ranges = [];
+  for (let index = 0; index < weeks.length; index++) {
+    const first = weeks[index];
+    while (index + 1 < weeks.length && weeks[index + 1] === weeks[index] + 1) index++;
+    ranges.push(first === weeks[index] ? String(first) : `${first}-${weeks[index]}`);
+  }
+  return ranges.join(',');
+}
+
+function decodeWeeks(value) {
+  if (typeof value !== 'string' || !value) throw new Error('Invalid weeks');
+  const ranges = value.split(',');
+  if (ranges.length > 60) throw new Error('Invalid weeks');
+  const weeks = new Set();
+  for (const range of ranges) {
+    const match = /^(\d+)(?:-(\d+)(\/2)?)?$/.exec(range);
+    if (!match) throw new Error('Invalid week range');
+    const first = Number(match[1]);
+    const last = Number(match[2] || match[1]);
+    if (first < 1 || last > 60 || first > last) throw new Error('Invalid week range');
+    for (let week = first; week <= last; week += match[3] ? 2 : 1) weeks.add(week);
+  }
+  return [...weeks].sort((first, second) => first - second);
+}
+
+function encodeShareText(schedule) {
+  const lines = [
+    '林木2',
+    JSON.stringify([schedule.name, schedule.termStart || '', schedule.totalWeeks, schedule.weekOffset || 0]),
+    JSON.stringify(schedule.times.map((time) => time.join('-'))),
+  ];
+  for (const course of schedule.courses) {
+    const row = [course.name, course.teacher || '', course.location || '', course.day, course.start, course.end, encodeWeeks(course.weeks)];
+    const color = Math.max(0, colors.indexOf(course.color));
+    if (color || course.note) row.push(color);
+    if (course.note) row.push(course.note);
+    lines.push(JSON.stringify(row));
+  }
+  return lines.join('\n');
+}
+
+function decodeShareText(text) {
+  const lines = text.trim().split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.shift() !== '林木2' || lines.length < 2) throw new Error('Invalid format');
+  const metadata = JSON.parse(lines.shift());
+  const timeList = JSON.parse(lines.shift());
+  if (!Array.isArray(metadata) || metadata.length !== 4 || typeof metadata[0] !== 'string' || typeof metadata[1] !== 'string' || !Array.isArray(timeList)) throw new Error('Invalid metadata');
+  const courses = lines.map((line) => {
+    const row = JSON.parse(line);
+    if (!Array.isArray(row) || row.length < 7 || row.length > 9 || (row[7] !== undefined && (!Number.isInteger(row[7]) || !colors[row[7]]))) throw new Error('Invalid course');
+    return { name: row[0], teacher: row[1], location: row[2], day: row[3], start: row[4], end: row[5], weeks: decodeWeeks(row[6]), color: colors[row[7] || 0], note: row[8] || '' };
+  });
+  const times = timeList.map((time) => {
+    if (typeof time !== 'string') throw new Error('Invalid time');
+    return time.split('-');
+  });
+  return { name: metadata[0], termStart: metadata[1] || undefined, totalWeeks: metadata[2], weekOffset: metadata[3], times, courses };
 }
 
 async function copyExportText() {

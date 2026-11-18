@@ -35,7 +35,6 @@ const unsigned = path.join(build, 'unsigned.apk');
 const aligned = path.join(build, 'aligned.apk');
 const signed = path.join(build, 'signed.apk');
 const apkName = `林木-Android-${version}.apk`;
-const apk = path.join(output, apkName);
 const passwordFile = path.join(signing, 'password.txt');
 const keystore = path.join(signing, 'linmu.p12');
 run('检查应用脚本', process.execPath, ['--check', path.join(root, 'web/app.js')]);
@@ -73,11 +72,37 @@ const permissions = run('验证应用权限', path.join(tools, 'aapt.exe'), ['du
 if (permissions.includes('android.permission.INTERNET')) throw new Error('Offline app unexpectedly requests INTERNET');
 const bytes = fs.readFileSync(signed);
 const assetReport = verifyPackagedAssets(bytes);
-fs.copyFileSync(signed, apk);
-const report = { version, package: 'com.linmu.timetable', minAndroid: 8, targetSdk: 35, apk, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'), signature, badging, permissions, builtAt: new Date().toISOString(), assetsSha256: assetReport.hashes, verifiedApkEntries: assetReport.entries };
-fs.writeFileSync(path.join(output, '构建校验.json'), JSON.stringify(report, null, 2));
-fs.writeFileSync(path.join(output, 'SHA256.txt'), `${report.sha256}  ${apkName}\n`);
+const apk = publishApk(signed, output, apkName);
+if (path.dirname(apk) === output) {
+  const report = { version, package: 'com.linmu.timetable', minAndroid: 8, targetSdk: 35, apk, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'), signature, badging, permissions, builtAt: new Date().toISOString(), assetsSha256: assetReport.hashes, verifiedApkEntries: assetReport.entries };
+  fs.writeFileSync(path.join(output, '构建校验.json'), JSON.stringify(report, null, 2));
+  fs.writeFileSync(path.join(output, 'SHA256.txt'), `${report.sha256}  ${apkName}\n`);
+}
 console.log(`完成 ${apk} (${bytes.length} bytes)`);
+
+function publishApk(source, outputDirectory, name) {
+  const installedPackages = fs.readdirSync(outputDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^林木-Android-\d+(?:\.\d+)+\.apk$/.test(entry.name))
+    .map((entry) => entry.name);
+  const [latest] = [...installedPackages, name].sort((first, second) => second.localeCompare(first, 'en', { numeric: true }));
+  const archiveDirectory = path.join(outputDirectory, '历史版本');
+
+  function archivePath(fileName) {
+    fs.mkdirSync(archiveDirectory, { recursive: true });
+    let destination = path.join(archiveDirectory, fileName);
+    for (let copy = 2; fs.existsSync(destination); copy++) {
+      destination = path.join(archiveDirectory, `${path.basename(fileName, '.apk')} (${copy}).apk`);
+    }
+    return destination;
+  }
+
+  const destination = name === latest ? path.join(outputDirectory, name) : archivePath(name);
+  fs.copyFileSync(source, destination);
+  for (const fileName of installedPackages) {
+    if (fileName !== latest) fs.renameSync(path.join(outputDirectory, fileName), archivePath(fileName));
+  }
+  return destination;
+}
 
 function verifyPackagedAssets(bytes) {
   const end = bytes.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));

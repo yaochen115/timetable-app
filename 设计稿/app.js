@@ -126,7 +126,6 @@ function dateRange() {
 function renderSchedule() {
   persistTables();
   $('#week-label').textContent = `第 ${currentWeek} 周`;
-  $('#table-name').textContent = tableName;
   const grid = $('#schedule');
   grid.style.setProperty('--rows', times.length);
   let html = '<div class="day-heading corner" style="grid-column:1" aria-label="节次">节</div>';

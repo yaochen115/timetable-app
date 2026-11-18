@@ -14,6 +14,7 @@ import android.util.AtomicFile;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -155,6 +156,14 @@ public final class MainActivity extends Activity {
             runOnUiThread(() -> {
                 appearance = value;
                 updateAppearance();
+            });
+        }
+
+        @JavascriptInterface public void hideKeyboard() {
+            runOnUiThread(() -> {
+                if (webView == null) return;
+                InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                manager.hideSoftInputFromWindow(webView.getWindowToken(), 0);
             });
         }
     }

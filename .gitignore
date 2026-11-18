@@ -28,3 +28,8 @@ key.properties
 # Generated application packages stay local
 *.apk
 *.aab
+
+# Personal timetable imports and their verification images
+/导入数据/
+/验收/课表识别/
+/验收/安卓/08-用户课表导入.png
